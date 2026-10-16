@@ -1,3 +1,9 @@
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Secret-Flag = "FLAG{check_your_headers}"
+    X-Content-Type-Options = "nosniff"
+
 [[redirects]]
   from = "/robots.txt"
   to = "/robots.txt"

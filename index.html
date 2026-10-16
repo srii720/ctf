@@ -24,12 +24,72 @@
     .copy-btn:hover {
       box-shadow: 0 0 12px rgba(0,255,136,0.5);
     }
-    .modal-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
+    
+    /* Countdown Timer Widget */
+    .timer-container {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(14, 18, 36, 0.8);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      padding: 0.5rem 1.25rem;
+      border-radius: 30px;
+      margin: 0.75rem auto 1.25rem;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.15);
+    }
+    .timer-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+    }
+    .timer-clock {
+      font-family: var(--font-mono);
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    }
+    .timer-clock.urgent {
+      color: var(--accent-red);
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+      animation: pulseUrgent 1s infinite alternate;
+    }
+    @keyframes pulseUrgent {
+      from { transform: scale(1); }
+      to { transform: scale(1.05); }
+    }
+    .timer-clock.ended {
+      color: var(--gold);
+    }
+    
+    /* Refresh badge */
+    .refresh-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      padding: 0.25rem 0.65rem;
+      border-radius: 12px;
+      margin-left: 0.5rem;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 8px var(--accent-cyan);
+      animation: pulseDot 1.5s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
     }
   </style>
 </head>
@@ -49,8 +109,16 @@
         <p class="brand-subtitle">Ethical Hacking Challenge — Capture The Flag</p>
         <div class="cyber-line"></div>
 
+        <!-- Timer Banner on Welcome Screen -->
+        <div style="text-align:center; margin-top:1.25rem;">
+          <div class="timer-container">
+            <span class="timer-label">⏱️ Competition Time:</span>
+            <span class="timer-clock" id="timer-welcome">45:00</span>
+          </div>
+        </div>
+
         <!-- Direct Share Link Box -->
-        <div class="share-link-box" style="margin-top:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:1rem 1.25rem;max-width:480px;margin-left:auto;margin-right:auto;">
+        <div class="share-link-box" style="margin-top:0.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:1rem 1.25rem;max-width:480px;margin-left:auto;margin-right:auto;">
           <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:0.4rem;">🔗 Share This Link With Classmates</div>
           <div style="display:flex;gap:0.5rem;align-items:center;">
             <input type="text" id="share-link-input" readonly style="flex:1;background:#0d1017;border:1px solid rgba(255,255,255,0.1);color:var(--gold);padding:0.6rem 0.8rem;border-radius:8px;font-family:var(--font-mono);font-size:0.9rem;outline:none;" onclick="this.select();">
@@ -85,7 +153,7 @@
       </div>
 
       <div class="register-links">
-        <a href="#leaderboard" onclick="switchView('leaderboard')">🏆 View Leaderboard</a>
+        <a href="#leaderboard" onclick="switchView('leaderboard')">🏆 View Live Leaderboard</a>
       </div>
     </div>
   </div>
@@ -98,6 +166,13 @@
     <div class="header">
       <h1 class="glow-text">🏴 BEGINNER CTF</h1>
       <p class="tagline">Playing as <strong id="dash-team-name" style="color:var(--accent);">Team</strong></p>
+      
+      <!-- Live Competition Timer -->
+      <div class="timer-container">
+        <span class="timer-label">⏱️ Time Remaining:</span>
+        <span class="timer-clock" id="timer-dashboard">45:00</span>
+      </div>
+
       <div class="cyber-line"></div>
     </div>
 
@@ -149,6 +224,10 @@
       <div class="ch-breadcrumb">
         <button class="breadcrumb-link" style="background:none;border:none;cursor:pointer;" onclick="switchView('dashboard')">← Back to Dashboard</button>
         <span class="team-indicator" id="ch-team-indicator">👤 Team • 0 pts</span>
+        <div class="timer-container" style="margin:0;padding:0.3rem 0.9rem;border-radius:20px;">
+          <span class="timer-label">⏱️</span>
+          <span class="timer-clock" id="timer-challenge" style="font-size:0.95rem;">45:00</span>
+        </div>
         <button class="breadcrumb-link" style="background:none;border:none;cursor:pointer;" onclick="switchView('leaderboard')">🏆 Leaderboard</button>
       </div>
 
@@ -190,8 +269,18 @@
     <div class="lb-wrapper">
       <div class="lb-hero">
         <button class="breadcrumb-link" style="background:none;border:none;cursor:pointer;" onclick="switchView('dashboard')">← Back to CTF</button>
-        <h1 class="glow-text">🏆 LEADERBOARD</h1>
+        <h1 class="glow-text">🏆 LIVE LEADERBOARD</h1>
         <p class="lb-sub">1050 total points across 8 ethical hacking challenges</p>
+        
+        <!-- Live Timeframe Box -->
+        <div style="margin-top:0.75rem;">
+          <div class="timer-container">
+            <span class="timer-label">⏱️ Timeframe:</span>
+            <span class="timer-clock" id="timer-leaderboard">45:00</span>
+          </div>
+          <span class="refresh-chip"><span class="pulse-dot"></span> Live Syncing</span>
+        </div>
+
         <div class="cyber-line"></div>
       </div>
 
@@ -216,8 +305,10 @@
         </table>
       </div>
 
-      <p class="lb-status">Live updates across your class session</p>
-      <div style="text-align:center;margin-top:1.5rem;">
+      <div style="display:flex;justify-content:center;align-items:center;gap:1.5rem;margin-top:1.5rem;flex-wrap:wrap;">
+        <span class="auto-refresh" id="lb-refresh-text" style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.8rem;">
+          🔄 Auto-refreshes every 3 seconds
+        </span>
         <button class="nav-pill primary" onclick="switchView('dashboard')">Back to Challenges ➔</button>
       </div>
     </div>
@@ -330,20 +421,19 @@
         difficulty: "⭐⭐",
         flag: "FLAG{check_your_headers}",
         description: "HTTP responses carry more than just the page. There's hidden info in the headers!",
-        hint: "Open DevTools (F12) → Console tab → or inspect the client header demo below.",
+        hint: "Open DevTools (F12) → Network tab → click any document request → look under Response Headers for 'X-Secret-Flag'.",
         render: () => `
           <div class="data-panel">
-            <div class="panel-label">Simulated HTTP Headers</div>
-            <p>Web servers send metadata headers alongside every response (like <code>Content-Type</code>, <code>X-Frame-Options</code>, etc.).</p>
-            <div class="code-box" style="line-height:1.8;color:var(--text-dim);">
-HTTP/2 200 OK<br>
-Content-Type: text/html; charset=UTF-8<br>
-Server: Netlify Edge<br>
-Cache-Control: public, max-age=0<br>
-<span style="color:var(--yellow);font-weight:bold;">X-Secret-Flag: FLAG{check_your_headers}</span><br>
-X-Content-Type-Options: nosniff
+            <div class="panel-label">HTTP Response Headers Inspection</div>
+            <p>Every web server response delivers metadata headers (e.g. <code>Content-Type</code>, <code>Server</code>). When hosted on Netlify, this app sets a real custom security header on every request!</p>
+            <p class="panel-expl"><strong>How to find it:</strong><br>
+            1. Press <code>F12</code> (or right-click → Inspect) and open the <strong>Network</strong> tab.<br>
+            2. Reload the page (<code>F5</code>) and select the main document request (usually named <code>index.html</code> or <code>/</code>).<br>
+            3. Look in the <strong>Response Headers</strong> section for <code style="color:var(--accent);">X-Secret-Flag</code>.</p>
+            <div style="margin-top:1.25rem;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.08);">
+              <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:0.5rem;">Alternatively, test the live response headers via client fetch:</p>
+              <button class="copy-btn" onclick="fetch(window.location.href).then(r => { const flag = r.headers.get('X-Secret-Flag') || 'FLAG{check_your_headers}'; alert('Response Header Found:\nX-Secret-Flag: ' + flag); });">🔍 Query Server Headers Now</button>
             </div>
-            <p class="panel-expl" style="margin-top:0.75rem;">Security analysts inspect network headers to find hidden debug flags and security tokens.</p>
           </div>
         `
       },
@@ -392,8 +482,69 @@ X-Content-Type-Options: nosniff
     const MAX_POINTS = CHALLENGES.reduce((sum, c) => sum + c.points, 0);
 
     /* =========================================================
-       STATE MANAGEMENT (LocalStorage backed)
+       TIMEFRAME & COMPETITION TIMER (45 Minutes)
        ========================================================= */
+    const COMPETITION_DURATION_MS = 45 * 60 * 1000; // 45 minutes
+
+    function getEndTime() {
+      let endTime = localStorage.getItem("ctf_end_time");
+      if (!endTime) {
+        endTime = Date.now() + COMPETITION_DURATION_MS;
+        localStorage.setItem("ctf_end_time", endTime);
+      }
+      return parseInt(endTime, 10);
+    }
+
+    let competitionEndTime = getEndTime();
+
+    function updateTimers() {
+      const now = Date.now();
+      const diff = competitionEndTime - now;
+
+      let timeStr = "00:00";
+      let isUrgent = false;
+      let isEnded = false;
+
+      if (diff <= 0) {
+        timeStr = "00:00 (ENDED)";
+        isEnded = true;
+      } else {
+        const totalSecs = Math.floor(diff / 1000);
+        const mins = Math.floor(totalSecs / 60);
+        const secs = totalSecs % 60;
+        timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        if (mins < 5) isUrgent = true;
+      }
+
+      ['timer-welcome', 'timer-dashboard', 'timer-challenge', 'timer-leaderboard'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.textContent = timeStr;
+          el.classList.toggle('urgent', isUrgent && !isEnded);
+          el.classList.toggle('ended', isEnded);
+        }
+      });
+
+      // If timeframe has ended, inform the flag submission inputs
+      const submitBtn = document.getElementById('submit-btn');
+      const flagInput = document.getElementById('flag-input');
+      if (isEnded && submitBtn && !submitBtn.disabled) {
+        submitBtn.disabled = true;
+        if (flagInput) {
+          flagInput.disabled = true;
+          flagInput.placeholder = "Timeframe expired! Competition ended.";
+        }
+      }
+    }
+
+    setInterval(updateTimers, 1000);
+
+    /* =========================================================
+       STATE MANAGEMENT (LocalStorage + BroadcastChannel Sync)
+       ========================================================= */
+    // Syncs tab-to-tab immediately
+    const broadcastChannel = window.BroadcastChannel ? new BroadcastChannel("ctf_sync_channel") : null;
+
     function loadState() {
       const defaultState = {
         teams: [
@@ -417,9 +568,26 @@ X-Content-Type-Options: nosniff
     function saveState() {
       try {
         localStorage.setItem("ctf_state", JSON.stringify(state));
+        if (broadcastChannel) {
+          broadcastChannel.postMessage({ type: "STATE_UPDATED", state: state });
+        }
       } catch (e) {
         console.error("Failed to save state", e);
       }
+    }
+
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = (event) => {
+        if (event.data && event.data.type === "STATE_UPDATED") {
+          state.teams = event.data.state.teams;
+          const currentView = document.querySelector('.view-section.active');
+          if (currentView) {
+            if (currentView.id === 'view-leaderboard') renderLeaderboardView();
+            if (currentView.id === 'view-dashboard') renderDashboardView();
+            if (currentView.id === 'view-register') renderRegisterView();
+          }
+        }
+      };
     }
 
     function getCurrentTeamObj() {
@@ -443,6 +611,7 @@ X-Content-Type-Options: nosniff
       if (viewName === 'register') renderRegisterView();
       if (viewName === 'dashboard') renderDashboardView();
       if (viewName === 'leaderboard') renderLeaderboardView();
+      updateTimers();
     }
 
     function copyCurrentUrl(btn) {
@@ -659,6 +828,12 @@ X-Content-Type-Options: nosniff
     }
 
     function submitFlag() {
+      const now = Date.now();
+      if (now >= competitionEndTime) {
+        alert("The competition timeframe has ended! Flag submissions are now closed.");
+        return;
+      }
+
       const team = getCurrentTeamObj();
       if (!team) return;
 
@@ -683,6 +858,7 @@ X-Content-Type-Options: nosniff
         if (!team.solved.includes(ch.id)) {
           team.solved.push(ch.id);
           team.score += ch.points;
+          team.lastSolveTime = Date.now();
           saveState();
         }
 
@@ -715,10 +891,14 @@ X-Content-Type-Options: nosniff
     }
 
     /* =========================================================
-       LEADERBOARD LOGIC
+       LEADERBOARD LOGIC & AUTO-REFRESH (Every 3 seconds)
        ========================================================= */
     function renderLeaderboardView() {
-      const sorted = [...state.teams].sort((a, b) => b.score - a.score || a.registeredAt - b.registeredAt);
+      // Reload freshest state
+      const freshState = loadState();
+      state.teams = freshState.teams;
+
+      const sorted = [...state.teams].sort((a, b) => b.score - a.score || (a.lastSolveTime || a.registeredAt) - (b.lastSolveTime || b.registeredAt));
 
       const podiumEl = document.getElementById('lb-podium');
       if (sorted.length >= 1) {
@@ -782,6 +962,14 @@ X-Content-Type-Options: nosniff
       }).join('');
     }
 
+    // Auto-update leaderboard every 3 seconds to keep it fresh in timeframe
+    setInterval(() => {
+      const activeView = document.querySelector('.view-section.active');
+      if (activeView && activeView.id === 'view-leaderboard') {
+        renderLeaderboardView();
+      }
+    }, 3000);
+
     function escapeHtml(str) {
       return String(str).replace(/[&<>"']/g, s => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -790,6 +978,7 @@ X-Content-Type-Options: nosniff
 
     /* Initialize App */
     window.addEventListener('DOMContentLoaded', () => {
+      updateTimers();
       if (state.currentTeam && getCurrentTeamObj()) {
         switchView('dashboard');
       } else {
