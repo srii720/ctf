@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Beginner CTF</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="header">
+    <h1 class="glow-text">🏴 BEGINNER CTF</h1>
+    <p class="tagline">Playing as <strong style="color:var(--accent)">{{ team_name }}</strong></p>
+    <div class="cyber-line"></div>
+  </div>
+
+  <div class="top-nav">
+    <a href="/leaderboard" class="nav-pill primary">🏆 Leaderboard</a>
+    <a href="/leave" class="nav-pill danger">🚪 Leave Team</a>
+  </div>
+
+  <div class="scoreboard">
+    <div class="stat-card">
+      <div class="stat-label">Score</div>
+      <div class="stat-value green">{{ total_points }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Solved</div>
+      <div class="stat-value cyan">{{ solved|length }}/{{ challenges|length }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Max Points</div>
+      <div class="stat-value muted">{{ max_points }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Teams</div>
+      <div class="stat-value purple">{{ team_count }}/{{ max_teams }}</div>
+    </div>
+  </div>
+
+  {% set pct = (total_points / max_points * 100) if max_points else 0 %}
+  <div class="progress-container">
+    <div class="progress-track">
+      <div class="progress-fill" style="width: {{ pct }}%"></div>
+    </div>
+  </div>
+
+  <div class="challenges">
+    {% for ch in challenges %}
+      {% if ch.is_active %}
+        <a href="/challenge/{{ ch.id }}" class="challenge-card active-card">
+          <div class="card-header">
+            <span class="badge {{ ch.category|lower }}">{{ ch.category }}</span>
+            <span class="card-points">{{ ch.points }} pts</span>
+            <span class="card-difficulty" style="color:var(--accent);font-weight:bold;">▶ ACTIVE</span>
+          </div>
+          <h3>{{ ch.title }}</h3>
+          <p class="card-desc">{{ ch.description }}</p>
+        </a>
+      {% elif ch.is_solved %}
+        <div class="challenge-card solved locked-card" title="Completed & Locked">
+          <div class="card-header">
+            <span class="badge {{ ch.category|lower }}">{{ ch.category }}</span>
+            <span class="card-points">{{ ch.points }} pts</span>
+            <span class="card-difficulty" style="color:var(--accent);">✅ SOLVED</span>
+          </div>
+          <h3 style="color:var(--text-dim);">{{ ch.title }}</h3>
+          <p class="card-desc" style="opacity:0.7;">Challenge solved! Locked to keep your progress secure.</p>
+        </div>
+      {% else %}
+        <div class="challenge-card locked-card" title="Locked until previous challenge is solved">
+          <div class="card-header">
+            <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--text-dim);">LOCKED</span>
+            <span class="card-points" style="color:var(--text-dim);">{{ ch.points }} pts</span>
+            <span class="card-difficulty" style="color:var(--text-dim);">🔒 LOCKED</span>
+          </div>
+          <h3 style="color:var(--text-dim);">{{ ch.title }}</h3>
+          <p class="card-desc" style="opacity:0.5;">Solve the previous challenge to unlock this problem.</p>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  <div class="footer">
+    <a href="/leaderboard">🏆 Leaderboard</a> &nbsp;•&nbsp; Happy Hacking! 🐱‍💻
+  </div>
+
+  <script src="/static/confetti.js"></script>
+</body>
+</html>

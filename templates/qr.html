@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join CTF — QR Code</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="qr-fullscreen">
+    <h1 class="glow-text">🏴 BEGINNER CTF</h1>
+    <p class="qr-tagline">Scan the QR code to join the battle!</p>
+    
+    <div class="qr-jumbo" id="qr-jumbo"></div>
+    
+    <p class="url-huge">{{ ctf_url }}</p>
+    
+    <p class="steps">
+      <strong>Step 1:</strong> Connect to the same WiFi<br>
+      <strong>Step 2:</strong> Scan QR or type the URL<br>
+      <strong>Step 3:</strong> Register your team<br>
+      <strong>Step 4:</strong> Start hacking! 🐱‍💻
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="/static/confetti.js"></script>
+  <script>
+    const qr = qrcode(0, 'M');
+    qr.addData('{{ ctf_url }}');
+    qr.make();
+    const qrJumbo = document.getElementById('qr-jumbo');
+    if (qrJumbo) {
+      qrJumbo.innerHTML = qr.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
+    }
+  </script>
+</body>
+</html>
