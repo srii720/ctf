@@ -1,0 +1,3 @@
+User-agent: *
+Disallow: /super-secret-page
+# Nothing to see here... or is there?

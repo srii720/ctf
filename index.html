@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beginner CTF — Ethical Hacking Class</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* View Transitions */
+    .view-section { display: none; }
+    .view-section.active { display: block; }
+    .copy-btn {
+      padding: 0.5rem 1rem;
+      background: var(--accent);
+      color: #0a0a1a;
+      border: none;
+      border-radius: 8px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .copy-btn:hover {
+      box-shadow: 0 0 12px rgba(0,255,136,0.5);
+    }
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- 🏴 SECRET FLAG FOR CHALLENGE 1 (INSPECTOR GADGET): FLAG{html_source_is_your_friend} -->
+  <div class="bg-grid"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- ==========================================
+       VIEW 1: REGISTRATION / WELCOME VIEW
+       ========================================== -->
+  <div id="view-register" class="view-section">
+    <div class="register-wrapper">
+      <div class="register-brand">
+        <div class="brand-icon">█▓▒░ 🏴 ░▒▓█</div>
+        <h1 class="brand-title glow-text">BEGINNER CTF</h1>
+        <p class="brand-subtitle">Ethical Hacking Challenge — Capture The Flag</p>
+        <div class="cyber-line"></div>
+
+        <!-- Direct Share Link Box -->
+        <div class="share-link-box" style="margin-top:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:1rem 1.25rem;max-width:480px;margin-left:auto;margin-right:auto;">
+          <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:0.4rem;">🔗 Share This Link With Classmates</div>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <input type="text" id="share-link-input" readonly style="flex:1;background:#0d1017;border:1px solid rgba(255,255,255,0.1);color:var(--gold);padding:0.6rem 0.8rem;border-radius:8px;font-family:var(--font-mono);font-size:0.9rem;outline:none;" onclick="this.select();">
+            <button type="button" class="copy-btn" onclick="copyCurrentUrl(this)">Copy Link</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="register-box">
+        <div class="slot-indicator" id="slot-indicator">
+          🟢 Slots Available (Max 10 Teams)
+        </div>
+
+        <div id="register-error" class="form-error" style="display:none;"></div>
+
+        <form id="register-form" onsubmit="handleRegistration(event)">
+          <div class="form-group">
+            <label for="team_name">Enter Your Team Name</label>
+            <div class="form-row">
+              <input type="text" id="team_name" placeholder="e.g. Binary Bandits" maxlength="30" required autofocus autocomplete="off">
+              <button type="submit">Join CTF 🚀</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="teams-enrolled">
+          <h4>Active Teams in Session</h4>
+          <div class="team-list" id="registered-teams-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+
+      <div class="register-links">
+        <a href="#leaderboard" onclick="switchView('leaderboard')">🏆 View Leaderboard</a>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       VIEW 2: CHALLENGES DASHBOARD
+       ========================================== -->
+  <div id="view-dashboard" class="view-section">
+    <div class="header">
+      <h1 class="glow-text">🏴 BEGINNER CTF</h1>
+      <p class="tagline">Playing as <strong id="dash-team-name" style="color:var(--accent);">Team</strong></p>
+      <div class="cyber-line"></div>
+    </div>
+
+    <div class="top-nav">
+      <button class="nav-pill primary" onclick="switchView('leaderboard')">🏆 Leaderboard</button>
+      <button class="nav-pill danger" onclick="leaveTeam()">🚪 Switch Team</button>
+    </div>
+
+    <div class="scoreboard">
+      <div class="stat-card">
+        <div class="stat-label">Score</div>
+        <div class="stat-value green" id="dash-score">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Solved</div>
+        <div class="stat-value cyan" id="dash-solved">0/8</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Max Points</div>
+        <div class="stat-value muted">1050</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Teams</div>
+        <div class="stat-value purple" id="dash-team-count">1/10</div>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-track">
+        <div class="progress-fill" id="dash-progress" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <div class="challenges" id="challenges-grid">
+      <!-- Challenge Cards Injected by JS -->
+    </div>
+
+    <div class="footer">
+      <a href="#leaderboard" onclick="switchView('leaderboard')">🏆 Leaderboard</a> &nbsp;•&nbsp; Happy Hacking! 🐱‍💻
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       VIEW 3: ACTIVE CHALLENGE DETAIL VIEW
+       ========================================== -->
+  <div id="view-challenge" class="view-section">
+    <div class="challenge-page">
+      <div class="ch-breadcrumb">
+        <button class="breadcrumb-link" style="background:none;border:none;cursor:pointer;" onclick="switchView('dashboard')">← Back to Dashboard</button>
+        <span class="team-indicator" id="ch-team-indicator">👤 Team • 0 pts</span>
+        <button class="breadcrumb-link" style="background:none;border:none;cursor:pointer;" onclick="switchView('leaderboard')">🏆 Leaderboard</button>
+      </div>
+
+      <h1 class="ch-title" id="ch-title">Challenge Title</h1>
+      <div class="ch-meta">
+        <span class="meta-tag" id="ch-category">📁 Category</span>
+        <span class="meta-tag" id="ch-points">💰 100 pts</span>
+        <span class="meta-tag" id="ch-difficulty">⭐ Easy</span>
+      </div>
+
+      <p class="ch-description" id="ch-description">Description text here</p>
+
+      <!-- Challenge Content Panel (changes dynamically) -->
+      <div id="ch-content-container"></div>
+
+      <!-- Hint Section -->
+      <button class="hint-btn" onclick="toggleHint()">💡 Need a hint? Click here...</button>
+      <div class="hint-box" id="ch-hint-box"></div>
+
+      <!-- Flag Submission Section -->
+      <div class="submit-row" id="ch-submit-row">
+        <input type="text" id="flag-input" placeholder="FLAG{...}" autocomplete="off" onkeydown="if(event.key==='Enter')submitFlag()">
+        <button id="submit-btn" onclick="submitFlag()">Submit Flag</button>
+      </div>
+      <div class="feedback" id="ch-feedback" style="display:none;"></div>
+
+      <!-- Next Problem Container (Shown when solved) -->
+      <div id="ch-next-container" style="display:none; text-align:center; margin-top:1.5rem;">
+        <button id="ch-next-btn" style="display:inline-block;padding:0.85rem 2rem;background:var(--accent);color:#0a0a1a;font-weight:bold;border:none;border-radius:10px;font-size:1.1rem;box-shadow:0 0 20px rgba(0,255,136,0.5);cursor:pointer;">Next Problem ➔</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ==========================================
+       VIEW 4: LEADERBOARD VIEW
+       ========================================= -->
+  <div id="view-leaderboard" class="view-section">
+    <div class="lb-wrapper">
+      <div class="lb-hero">
+        <button class="breadcrumb-link" style="background:none;border:none;cursor:pointer;" onclick="switchView('dashboard')">← Back to CTF</button>
+        <h1 class="glow-text">🏆 LEADERBOARD</h1>
+        <p class="lb-sub">1050 total points across 8 ethical hacking challenges</p>
+        <div class="cyber-line"></div>
+      </div>
+
+      <div class="podium-row" id="lb-podium">
+        <!-- Top 3 podium injected dynamically -->
+      </div>
+
+      <div class="lb-table-wrap">
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th class="rank-cell">#</th>
+              <th>Team</th>
+              <th>Solved</th>
+              <th>Score</th>
+              <th class="bar-cell">Progress</th>
+            </tr>
+          </thead>
+          <tbody id="lb-table-body">
+            <!-- Table rows injected dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <p class="lb-status">Live updates across your class session</p>
+      <div style="text-align:center;margin-top:1.5rem;">
+        <button class="nav-pill primary" onclick="switchView('dashboard')">Back to Challenges ➔</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script src="/static/confetti.js"></script>
+  <script>
+    /* =========================================================
+       DATA ARCHITECTURE & CHALLENGES DEFINITION
+       ========================================================= */
+    const CHALLENGES = [
+      {
+        id: "challenge1",
+        title: "🔍 Inspector Gadget",
+        category: "Web",
+        points: 100,
+        difficulty: "⭐",
+        flag: "FLAG{html_source_is_your_friend}",
+        description: "Every web page has secrets hiding in plain sight. Can you inspect what's really going on?",
+        hint: "Right-click anywhere on this page → click 'View Page Source' (or press Ctrl+U / Cmd+Option+U). Look at line 14!",
+        render: () => `
+          <div class="data-panel">
+            <div class="panel-label">Task Instructions</div>
+            <p>There is a hidden flag right inside this page's HTML structure! Web developers often leave developer comments behind.</p>
+            <p class="panel-expl"><strong>How to find it:</strong> Right-click anywhere on this page and click <code>View Page Source</code> (or press <code>Ctrl+U</code> / <code>Cmd+Option+U</code>). Then search (<code>Ctrl+F</code>) for <code>FLAG{</code>.</p>
+          </div>
+        `
+      },
+      {
+        id: "challenge2",
+        title: "🔤 Decode Me",
+        category: "Encoding",
+        points: 100,
+        difficulty: "⭐",
+        flag: "FLAG{base64_is_not_encryption}",
+        payload: "RkxBR3tiYXNlNjRfaXNfbm90X2VuY3J5cHRpb259",
+        description: "Someone encoded a secret message. It ends with '=' so it's probably not random...",
+        hint: "This encoding uses 64 characters. Decode it using CyberChef or Python base64.",
+        render: function() {
+          return `
+            <div class="data-panel">
+              <div class="panel-label">Encoded String (Base64)</div>
+              <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="copyText('${this.payload}')">${this.payload}</div>
+              <p class="panel-expl">Base64 converts binary data into 64 ASCII characters. You can decode it online at <a href="https://cyberchef.org" target="_blank" style="color:var(--cyan);text-decoration:underline;">CyberChef</a> (use recipe: "From Base64") or in terminal: <code>echo "${this.payload}" | base64 -d</code>.</p>
+            </div>
+          `;
+        }
+      },
+      {
+        id: "challenge3",
+        title: "🏛️ Caesar's Secret",
+        category: "Crypto",
+        points: 150,
+        difficulty: "⭐⭐",
+        flag: "FLAG{julius_would_be_proud}",
+        payload: "SYNT{whyvhf_jbhyq_or_cebhq}",
+        description: "Julius Caesar used a simple cipher to protect his messages. Can you crack this one?",
+        hint: "ROT13 is a special case of the Caesar cipher. Try rotating each letter by 13 places.",
+        render: function() {
+          return `
+            <div class="data-panel">
+              <div class="panel-label">Encrypted Message (ROT13)</div>
+              <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="copyText('${this.payload}')">${this.payload}</div>
+              <p class="panel-expl">ROT13 ("rotate by 13 places") is a classic substitution cipher. Each letter is replaced with the letter 13 places ahead. Decode it online at <a href="https://rot13.com" target="_blank" style="color:var(--cyan);text-decoration:underline;">rot13.com</a> or <a href="https://cyberchef.org" target="_blank" style="color:var(--cyan);text-decoration:underline;">CyberChef</a> (Recipe: "ROT13").</p>
+            </div>
+          `;
+        }
+      },
+      {
+        id: "challenge4",
+        title: "🤖 Robot Secrets",
+        category: "Web",
+        points: 100,
+        difficulty: "⭐",
+        flag: "FLAG{robots_txt_is_public}",
+        description: "Web crawlers follow rules. But what if those rules reveal hidden paths?",
+        hint: "Check /robots.txt in your browser address bar. It reveals hidden pages!",
+        render: () => `
+          <div class="data-panel">
+            <div class="panel-label">Web Reconnaissance</div>
+            <p>Search engines crawl websites using <code>/robots.txt</code>. Admins often specify pages they don't want search engines to index — which inadvertently exposes secret admin portals!</p>
+            <p class="panel-expl"><strong>Step 1:</strong> Open <a href="/robots.txt" target="_blank" style="color:var(--cyan);font-weight:bold;text-decoration:underline;">/robots.txt (Click here to view)</a>.<br><strong>Step 2:</strong> Look at the <code>Disallow</code> path and visit it to retrieve the flag.</p>
+          </div>
+        `
+      },
+      {
+        id: "challenge5",
+        title: "🍪 Cookie Monster",
+        category: "Web",
+        points: 150,
+        difficulty: "⭐⭐",
+        flag: "FLAG{cookies_are_delicious}",
+        description: "Mmm, cookies! Websites store little treats in your browser. Can you find the secret one?",
+        hint: "Open Developer Tools (F12) → Console tab → type document.cookie",
+        render: () => `
+          <div class="data-panel">
+            <div class="panel-label">Browser Cookie Storage</div>
+            <p>When you opened this challenge, a secret security cookie was placed in your browser storage.</p>
+            <p class="panel-expl"><strong>How to find it:</strong><br>1. Press <code>F12</code> (or right-click → Inspect).<br>2. Go to the <strong>Console</strong> tab and type: <code style="color:var(--accent);user-select:all;">document.cookie</code> and press Enter!<br>3. Alternatively, check <strong>Application</strong> / <strong>Storage</strong> tab → <strong>Cookies</strong>.</p>
+          </div>
+        `
+      },
+      {
+        id: "challenge6",
+        title: "📨 Header Hunter",
+        category: "Web",
+        points: 150,
+        difficulty: "⭐⭐",
+        flag: "FLAG{check_your_headers}",
+        description: "HTTP responses carry more than just the page. There's hidden info in the headers!",
+        hint: "Open DevTools (F12) → Console tab → or inspect the client header demo below.",
+        render: () => `
+          <div class="data-panel">
+            <div class="panel-label">Simulated HTTP Headers</div>
+            <p>Web servers send metadata headers alongside every response (like <code>Content-Type</code>, <code>X-Frame-Options</code>, etc.).</p>
+            <div class="code-box" style="line-height:1.8;color:var(--text-dim);">
+HTTP/2 200 OK<br>
+Content-Type: text/html; charset=UTF-8<br>
+Server: Netlify Edge<br>
+Cache-Control: public, max-age=0<br>
+<span style="color:var(--yellow);font-weight:bold;">X-Secret-Flag: FLAG{check_your_headers}</span><br>
+X-Content-Type-Options: nosniff
+            </div>
+            <p class="panel-expl" style="margin-top:0.75rem;">Security analysts inspect network headers to find hidden debug flags and security tokens.</p>
+          </div>
+        `
+      },
+      {
+        id: "challenge7",
+        title: "🔓 Hash Cracker",
+        category: "Crypto",
+        points: 200,
+        difficulty: "⭐⭐",
+        flag: "FLAG{password123_is_terrible}",
+        payload: "482c811da5d5b4bc6d497ffa98491e38",
+        description: "We found a leaked password hash. Can you figure out the original password?",
+        hint: "It's an MD5 hash. Paste it into CrackStation.net to recover the plain password.",
+        render: function() {
+          return `
+            <div class="data-panel">
+              <div class="panel-label">MD5 Cryptographic Hash</div>
+              <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="copyText('${this.payload}')">${this.payload}</div>
+              <p class="panel-expl">This is an MD5 hash of a common password. Paste this hash into <a href="https://crackstation.net" target="_blank" style="color:var(--cyan);text-decoration:underline;">CrackStation.net</a> to reverse the hash. Once cracked, format your flag as: <code>FLAG{&lt;cracked_password&gt;_is_terrible}</code>.</p>
+            </div>
+          `;
+        }
+      },
+      {
+        id: "challenge8",
+        title: "🧮 Hex Dump",
+        category: "Encoding",
+        points: 100,
+        difficulty: "⭐",
+        flag: "FLAG{hex_is_just_base16}",
+        payload: "464c41477b6865785f69735f6a7573745f6261736531367d",
+        description: "This message was converted to hexadecimal. Can you convert it back to text?",
+        hint: "Each pair of hex characters = one ASCII byte. Use CyberChef recipe: 'From Hex'.",
+        render: function() {
+          return `
+            <div class="data-panel">
+              <div class="panel-label">Hexadecimal Encoded String</div>
+              <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="copyText('${this.payload}')">${this.payload}</div>
+              <p class="panel-expl">Computers encode raw characters as hex byte pairs (Base 16). Decode this message at <a href="https://cyberchef.org" target="_blank" style="color:var(--cyan);text-decoration:underline;">CyberChef</a> (Recipe: "From Hex") or in Python: <code>bytes.fromhex("...").decode()</code>.</p>
+            </div>
+          `;
+        }
+      }
+    ];
+
+    const MAX_POINTS = CHALLENGES.reduce((sum, c) => sum + c.points, 0);
+
+    /* =========================================================
+       STATE MANAGEMENT (LocalStorage backed)
+       ========================================================= */
+    function loadState() {
+      const defaultState = {
+        teams: [
+          { name: "Team CyberCats", solved: ["challenge1", "challenge2"], score: 200, registeredAt: Date.now() - 3600000 },
+          { name: "Shadow Hackers", solved: ["challenge1"], score: 100, registeredAt: Date.now() - 7200000 }
+        ],
+        currentTeam: null
+      };
+
+      try {
+        const stored = localStorage.getItem("ctf_state");
+        if (stored) return JSON.parse(stored);
+      } catch (e) {
+        console.error("Failed to load state", e);
+      }
+      return defaultState;
+    }
+
+    let state = loadState();
+
+    function saveState() {
+      try {
+        localStorage.setItem("ctf_state", JSON.stringify(state));
+      } catch (e) {
+        console.error("Failed to save state", e);
+      }
+    }
+
+    function getCurrentTeamObj() {
+      if (!state.currentTeam) return null;
+      return state.teams.find(t => t.name.toLowerCase() === state.currentTeam.toLowerCase()) || null;
+    }
+
+    let activeChallengeId = null;
+
+    /* =========================================================
+       VIEW ROUTING
+       ========================================================= */
+    function switchView(viewName) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('view-' + viewName);
+      if (target) {
+        target.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      if (viewName === 'register') renderRegisterView();
+      if (viewName === 'dashboard') renderDashboardView();
+      if (viewName === 'leaderboard') renderLeaderboardView();
+    }
+
+    function copyCurrentUrl(btn) {
+      navigator.clipboard.writeText(window.location.origin);
+      btn.textContent = 'Copied! ✓';
+      setTimeout(() => { btn.textContent = 'Copy Link'; }, 2000);
+    }
+
+    function copyText(txt) {
+      navigator.clipboard.writeText(txt);
+      alert('Copied to clipboard!');
+    }
+
+    /* =========================================================
+       REGISTRATION LOGIC
+       ========================================================= */
+    function renderRegisterView() {
+      document.getElementById('share-link-input').value = window.location.origin;
+      const count = state.teams.length;
+      const indicator = document.getElementById('slot-indicator');
+      if (count < 10) {
+        indicator.innerHTML = `🟢 <strong>${10 - count} of 10</strong> Team Slots Available`;
+        document.getElementById('register-form').style.display = 'block';
+      } else {
+        indicator.innerHTML = `🔴 <strong>All 10 Team Slots Full!</strong>`;
+        document.getElementById('register-form').style.display = 'none';
+      }
+
+      const teamListEl = document.getElementById('registered-teams-list');
+      teamListEl.innerHTML = state.teams.map(t => `<span class="team-tag">${escapeHtml(t.name)}</span>`).join('');
+    }
+
+    function handleRegistration(e) {
+      e.preventDefault();
+      const input = document.getElementById('team_name');
+      const errorEl = document.getElementById('register-error');
+      const name = input.value.trim();
+
+      if (!name) return;
+
+      if (state.teams.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+        errorEl.textContent = `Team "${name}" already registered! Joining existing team session.`;
+        errorEl.style.display = 'block';
+        state.currentTeam = name;
+        saveState();
+        setTimeout(() => switchView('dashboard'), 800);
+        return;
+      }
+
+      if (state.teams.length >= 10) {
+        errorEl.textContent = 'Sorry, all 10 team slots are full!';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      state.teams.push({
+        name: name,
+        solved: [],
+        score: 0,
+        registeredAt: Date.now()
+      });
+      state.currentTeam = name;
+      saveState();
+
+      if (window.launchConfetti) window.launchConfetti();
+      switchView('dashboard');
+    }
+
+    function leaveTeam() {
+      state.currentTeam = null;
+      saveState();
+      switchView('register');
+    }
+
+    /* =========================================================
+       DASHBOARD LOGIC & SEQUENTIAL LOCKING
+       ========================================================= */
+    function renderDashboardView() {
+      const team = getCurrentTeamObj();
+      if (!team) {
+        switchView('register');
+        return;
+      }
+
+      document.getElementById('dash-team-name').textContent = team.name;
+      document.getElementById('dash-score').textContent = team.score;
+      document.getElementById('dash-solved').textContent = `${team.solved.length}/${CHALLENGES.length}`;
+      document.getElementById('dash-team-count').textContent = `${state.teams.length}/10`;
+
+      const pct = (team.score / MAX_POINTS) * 100;
+      document.getElementById('dash-progress').style.width = pct + '%';
+
+      // Find first unsolved challenge
+      const activeChallenge = CHALLENGES.find(c => !team.solved.includes(c.id));
+
+      const grid = document.getElementById('challenges-grid');
+      grid.innerHTML = CHALLENGES.map((ch, idx) => {
+        const isSolved = team.solved.includes(ch.id);
+        const isActive = activeChallenge && activeChallenge.id === ch.id;
+
+        if (isActive) {
+          return `
+            <div class="challenge-card active-card" onclick="openChallenge('${ch.id}')">
+              <div class="card-header">
+                <span class="badge ${ch.category.toLowerCase()}">${ch.category}</span>
+                <span class="card-points">${ch.points} pts</span>
+                <span class="card-difficulty" style="color:var(--accent);font-weight:bold;">▶ ACTIVE</span>
+              </div>
+              <h3>${ch.title}</h3>
+              <p class="card-desc">${ch.description}</p>
+            </div>
+          `;
+        } else if (isSolved) {
+          return `
+            <div class="challenge-card solved locked-card" title="Completed & Locked">
+              <div class="card-header">
+                <span class="badge ${ch.category.toLowerCase()}">${ch.category}</span>
+                <span class="card-points">${ch.points} pts</span>
+                <span class="card-difficulty" style="color:var(--accent);">✅ SOLVED</span>
+              </div>
+              <h3 style="color:var(--text-dim);">${ch.title}</h3>
+              <p class="card-desc" style="opacity:0.7;">Challenge solved! Locked to preserve your progress.</p>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="challenge-card locked-card" title="Locked until previous challenges are solved">
+              <div class="card-header">
+                <span class="badge" style="background:rgba(255,255,255,0.05);color:var(--text-dim);">LOCKED</span>
+                <span class="card-points" style="color:var(--text-dim);">${ch.points} pts</span>
+                <span class="card-difficulty" style="color:var(--text-dim);">🔒 LOCKED</span>
+              </div>
+              <h3 style="color:var(--text-dim);">${ch.title}</h3>
+              <p class="card-desc" style="opacity:0.5;">Solve Challenge #${idx} first to unlock this problem.</p>
+            </div>
+          `;
+        }
+      }).join('');
+    }
+
+    /* =========================================================
+       CHALLENGE DETAIL & SUBMISSION
+       ========================================================= */
+    function openChallenge(id) {
+      const team = getCurrentTeamObj();
+      if (!team) {
+        switchView('register');
+        return;
+      }
+
+      const chIndex = CHALLENGES.findIndex(c => c.id === id);
+      if (chIndex === -1) return;
+
+      // Enforce sequential lock
+      for (let i = 0; i < chIndex; i++) {
+        if (!team.solved.includes(CHALLENGES[i].id)) {
+          alert("You must complete the previous challenge before accessing this one!");
+          return;
+        }
+      }
+
+      activeChallengeId = id;
+      const ch = CHALLENGES[chIndex];
+      const isSolved = team.solved.includes(id);
+
+      // Challenge 5: Set Secret Cookie
+      if (id === 'challenge5') {
+        document.cookie = "secret_flag=FLAG{cookies_are_delicious}; path=/";
+      }
+
+      document.getElementById('ch-team-indicator').textContent = `👤 ${team.name} • ${team.score} pts`;
+      document.getElementById('ch-title').textContent = ch.title;
+      document.getElementById('ch-category').textContent = `📁 ${ch.category}`;
+      document.getElementById('ch-points').textContent = `💰 ${ch.points} pts`;
+      document.getElementById('ch-difficulty').textContent = ch.difficulty;
+      document.getElementById('ch-description').textContent = ch.description;
+
+      document.getElementById('ch-content-container').innerHTML = ch.render();
+      document.getElementById('ch-hint-box').textContent = `💡 ${ch.hint}`;
+      document.getElementById('ch-hint-box').classList.remove('visible');
+
+      const submitRow = document.getElementById('ch-submit-row');
+      const feedback = document.getElementById('ch-feedback');
+      const nextContainer = document.getElementById('ch-next-container');
+      const flagInput = document.getElementById('flag-input');
+
+      feedback.style.display = 'none';
+      flagInput.value = '';
+      flagInput.disabled = false;
+      document.getElementById('submit-btn').disabled = false;
+
+      if (isSolved) {
+        submitRow.style.display = 'none';
+        nextContainer.style.display = 'block';
+        const nextCh = CHALLENGES[chIndex + 1];
+        const nextBtn = document.getElementById('ch-next-btn');
+        if (nextCh) {
+          nextBtn.textContent = `Next Problem: ${nextCh.title} ➔`;
+          nextBtn.onclick = () => openChallenge(nextCh.id);
+        } else {
+          nextBtn.textContent = '🏆 All Challenges Completed! View Leaderboard ➔';
+          nextBtn.onclick = () => switchView('leaderboard');
+        }
+      } else {
+        submitRow.style.display = 'flex';
+        nextContainer.style.display = 'none';
+      }
+
+      switchView('challenge');
+    }
+
+    function toggleHint() {
+      document.getElementById('ch-hint-box').classList.toggle('visible');
+    }
+
+    function submitFlag() {
+      const team = getCurrentTeamObj();
+      if (!team) return;
+
+      const ch = CHALLENGES.find(c => c.id === activeChallengeId);
+      if (!ch) return;
+
+      const input = document.getElementById('flag-input');
+      const feedback = document.getElementById('ch-feedback');
+      const nextContainer = document.getElementById('ch-next-container');
+      const nextBtn = document.getElementById('ch-next-btn');
+      const val = input.value.trim();
+
+      if (!val) {
+        feedback.className = 'feedback fail';
+        feedback.textContent = '⚠️ Please enter a flag!';
+        feedback.style.display = 'block';
+        return;
+      }
+
+      // Case-insensitive comparison
+      if (val.toLowerCase() === ch.flag.toLowerCase()) {
+        if (!team.solved.includes(ch.id)) {
+          team.solved.push(ch.id);
+          team.score += ch.points;
+          saveState();
+        }
+
+        feedback.className = 'feedback win';
+        feedback.textContent = `🎉 Correct! +${ch.points} points awarded!`;
+        feedback.style.display = 'block';
+        input.disabled = true;
+        document.getElementById('submit-btn').disabled = true;
+
+        if (window.launchConfetti) window.launchConfetti();
+
+        const chIndex = CHALLENGES.findIndex(c => c.id === ch.id);
+        const nextCh = CHALLENGES[chIndex + 1];
+
+        if (nextCh) {
+          nextBtn.textContent = `Next Problem: ${nextCh.title} ➔`;
+          nextBtn.onclick = () => openChallenge(nextCh.id);
+        } else {
+          nextBtn.textContent = '🏆 All Challenges Completed! View Leaderboard ➔';
+          nextBtn.onclick = () => switchView('leaderboard');
+        }
+
+        nextContainer.style.display = 'block';
+        nextBtn.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        feedback.className = 'feedback fail';
+        feedback.textContent = '❌ Wrong flag. Check for typos and try again!';
+        feedback.style.display = 'block';
+      }
+    }
+
+    /* =========================================================
+       LEADERBOARD LOGIC
+       ========================================================= */
+    function renderLeaderboardView() {
+      const sorted = [...state.teams].sort((a, b) => b.score - a.score || a.registeredAt - b.registeredAt);
+
+      const podiumEl = document.getElementById('lb-podium');
+      if (sorted.length >= 1) {
+        let html = '';
+        if (sorted.length >= 2) {
+          html += `
+            <div class="podium-entry silver">
+              <div class="podium-icon">🥈</div>
+              <div class="podium-team">${escapeHtml(sorted[1].name)}</div>
+              <div class="podium-pts">${sorted[1].score} pts</div>
+              <div class="podium-pillar pillar-2"></div>
+            </div>
+          `;
+        }
+        html += `
+          <div class="podium-entry gold">
+            <div class="podium-icon">🥇</div>
+            <div class="podium-team">${escapeHtml(sorted[0].name)}</div>
+            <div class="podium-pts">${sorted[0].score} pts</div>
+            <div class="podium-pillar pillar-1"></div>
+          </div>
+        `;
+        if (sorted.length >= 3) {
+          html += `
+            <div class="podium-entry bronze">
+              <div class="podium-icon">🥉</div>
+              <div class="podium-team">${escapeHtml(sorted[2].name)}</div>
+              <div class="podium-pts">${sorted[2].score} pts</div>
+              <div class="podium-pillar pillar-3"></div>
+            </div>
+          `;
+        }
+        podiumEl.innerHTML = html;
+        podiumEl.style.display = 'flex';
+      } else {
+        podiumEl.style.display = 'none';
+      }
+
+      const tbody = document.getElementById('lb-table-body');
+      tbody.innerHTML = sorted.map((entry, idx) => {
+        const isYou = state.currentTeam && (entry.name.toLowerCase() === state.currentTeam.toLowerCase());
+        const pct = (entry.score / MAX_POINTS) * 100;
+        let rankBadge = idx + 1;
+        if (idx === 0) rankBadge = '🥇';
+        if (idx === 1) rankBadge = '🥈';
+        if (idx === 2) rankBadge = '🥉';
+
+        return `
+          <tr class="${isYou ? 'is-you' : ''}">
+            <td class="rank-cell">${rankBadge}</td>
+            <td class="team-cell">${escapeHtml(entry.name)} ${isYou ? '<span class="you-tag">YOU</span>' : ''}</td>
+            <td class="solved-cell">${entry.solved.length} / ${CHALLENGES.length}</td>
+            <td class="score-cell">${entry.score}</td>
+            <td class="bar-cell">
+              <div class="bar-track">
+                <div class="bar-fill" style="width: ${pct}%"></div>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[s]);
+    }
+
+    /* Initialize App */
+    window.addEventListener('DOMContentLoaded', () => {
+      if (state.currentTeam && getCurrentTeamObj()) {
+        switchView('dashboard');
+      } else {
+        switchView('register');
+      }
+    });
+  </script>
+</body>
+</html>
