@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register — Beginner CTF</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="register-wrapper">
+    <div class="register-brand">
+      <div class="brand-icon">█▓▒░ 🏴 ░▒▓█</div>
+      <h1 class="brand-title glow-text">BEGINNER CTF</h1>
+      <p class="brand-subtitle">Ethical Hacking Challenge — Capture The Flag</p>
+      <div class="cyber-line"></div>
+
+      <!-- Quick Share Link section -->
+      <div class="share-link-box" style="margin-top:1.5rem;background:rgba(255,255,255,0.03);border:1px solid rgba(0,255,136,0.3);border-radius:12px;padding:1rem 1.25rem;max-width:480px;margin-left:auto;margin-right:auto;">
+        <div style="font-size:0.8rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:0.4rem;">🔗 Share Direct Link with Students</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+          <input type="text" id="share-link-input" value="{{ ctf_url }}" readonly style="flex:1;background:#0d1017;border:1px solid rgba(255,255,255,0.1);color:var(--gold);padding:0.6rem 0.8rem;border-radius:8px;font-family:var(--font-mono);font-size:0.9rem;outline:none;" onclick="this.select();">
+          <button type="button" onclick="navigator.clipboard.writeText('{{ ctf_url }}'); this.textContent='Copied! ✓'; setTimeout(()=>this.textContent='Copy Link', 2000);" style="padding:0.6rem 1rem;background:var(--accent);color:#0a0a1a;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:0.85rem;white-space:nowrap;">Copy Link</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="register-box">
+      <div class="slot-indicator">
+        {% if team_count < max_teams %}
+          🟢 {{ max_teams - team_count }} of {{ max_teams }} slots available
+        {% else %}
+          🔴 All {{ max_teams }} slots taken!
+        {% endif %}
+      </div>
+
+      {% if error %}
+      <div class="form-error">{{ error }}</div>
+      {% endif %}
+
+      {% if team_count < max_teams %}
+      <form method="POST" action="/register">
+        <div class="form-group">
+          <label for="team_name">Choose your team name</label>
+          <div class="form-row">
+            <input type="text" id="team_name" name="team_name" 
+                   placeholder="e.g. Binary Bandits" maxlength="30" 
+                   required autofocus autocomplete="off">
+            <button type="submit">Join CTF 🚀</button>
+          </div>
+        </div>
+      </form>
+      {% endif %}
+
+      {% if teams_list %}
+      <div class="teams-enrolled">
+        <h4>Teams Registered</h4>
+        <div class="team-list">
+          {% for team in teams_list %}
+          <span class="team-tag">{{ team.name }}</span>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="register-links">
+      <a href="/leaderboard">🏆 View Leaderboard</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+  <script src="/static/confetti.js"></script>
+  <script>
+    // Generate QR code into #qr-reg using qrcode-generator library
+    const qr = qrcode(0, 'M');
+    qr.addData('{{ ctf_url }}');
+    qr.make();
+    const qrFrame = document.getElementById('qr-reg');
+    if (qrFrame) {
+      qrFrame.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
+    }
+  </script>
+</body>
+</html>

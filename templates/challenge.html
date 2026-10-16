@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ challenge.title }} — Beginner CTF</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="challenge-page">
+    <div class="ch-breadcrumb">
+      <a href="/" class="breadcrumb-link">← Back to Challenges</a>
+      <span class="team-indicator">👤 {{ team_name }} • {{ total_points }} pts</span>
+      <a href="/leaderboard" class="breadcrumb-link">🏆 Board</a>
+    </div>
+
+    <h1 class="ch-title">{{ challenge.title }}</h1>
+    <div class="ch-meta">
+      <span class="meta-tag">📁 {{ challenge.category }}</span>
+      <span class="meta-tag">💰 {{ challenge.points }} pts</span>
+      <span class="meta-tag">{{ challenge.difficulty }}</span>
+    </div>
+
+
+    <p class="ch-description">{{ challenge.description }}</p>
+
+    <!-- CHALLENGE-SPECIFIC CONTENT -->
+    {% if challenge.id == 'challenge1' %}
+    <!-- 🏴 SECRET FLAG: {{ challenge_data.flag_comment }} -->
+    <div class="data-panel">
+      <div class="panel-label">Task Instructions</div>
+      <p>There is a hidden flag right inside this page's HTML structure! Web developers often leave comments behind.</p>
+      <p class="panel-expl"><strong>How to find it:</strong> Right-click anywhere on this page and click <code>View Page Source</code> (or press <code>Ctrl+U</code> / <code>Cmd+Option+U</code>). Then search (<code>Ctrl+F</code>) for <code>FLAG{</code>.</p>
+    </div>
+    {% elif challenge.id == 'challenge2' %}
+    <div class="data-panel">
+      <div class="panel-label">Encoded String (Base64)</div>
+      <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="navigator.clipboard.writeText('{{ challenge_data.encoded_string }}'); alert('Copied to clipboard!');">{{ challenge_data.encoded_string }}</div>
+      <p class="panel-expl">Base64 converts binary data into 64 ASCII characters (A-Z, a-z, 0-9, +, /, and = padding). You can decode it online at <a href="https://cyberchef.org" target="_blank" style="color:var(--cyan);text-decoration:underline;">CyberChef</a> (use "From Base64") or in terminal with <code>echo "{{ challenge_data.encoded_string }}" | base64 -d</code>.</p>
+    </div>
+    {% elif challenge.id == 'challenge3' %}
+    <div class="data-panel">
+      <div class="panel-label">Encrypted Message (ROT13)</div>
+      <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="navigator.clipboard.writeText('{{ challenge_data.cipher_text }}'); alert('Copied to clipboard!');">{{ challenge_data.cipher_text }}</div>
+      <p class="panel-expl">ROT13 ("rotate by 13 places") is a classic Caesar substitution cipher. Each letter is shifted 13 letters forward. Decode it using <a href="https://rot13.com" target="_blank" style="color:var(--cyan);text-decoration:underline;">rot13.com</a> or <a href="https://cyberchef.org" target="_blank" style="color:var(--cyan);text-decoration:underline;">CyberChef</a> (Recipe: "ROT13").</p>
+    </div>
+    {% elif challenge.id == 'challenge4' %}
+    <div class="data-panel">
+      <div class="panel-label">Web Reconnaissance</div>
+      <p>Search engines crawl websites using <code>/robots.txt</code>. Admins specify pages they don't want Google to index — which often exposes interesting hidden paths!</p>
+      <p class="panel-expl"><strong>Step 1:</strong> Visit <a href="/robots.txt" target="_blank" style="color:var(--cyan);font-weight:bold;text-decoration:underline;">/robots.txt (Click here to open)</a>.<br><strong>Step 2:</strong> Look at the <code>Disallow</code> path and navigate to it in your browser address bar.</p>
+    </div>
+    {% elif challenge.id == 'challenge5' %}
+    <div class="data-panel">
+      <div class="panel-label">Cookie Inspection</div>
+      <p>When you opened this page, the server issued a secret cookie to your browser session.</p>
+      <p class="panel-expl"><strong>How to view it:</strong> Press <code>F12</code> (or right-click → <code>Inspect</code>), open the <strong>Console</strong> tab and type: <code style="color:var(--accent);user-select:all;">document.cookie</code> and press Enter! (Or check <strong>Application</strong> / <strong>Storage</strong> → <strong>Cookies</strong>).</p>
+    </div>
+    {% elif challenge.id == 'challenge6' %}
+    <div class="data-panel">
+      <div class="panel-label">HTTP Response Headers</div>
+      <p>Every response from a web server contains metadata headers (like Content-Type, Date, Server). A custom security flag header was returned with this page!</p>
+      <p class="panel-expl"><strong>How to view it:</strong> Press <code>F12</code> → Open <strong>Network</strong> tab → Refresh this page (F5) → Click on the <code>{{ challenge.id }}</code> request → Look under <strong>Response Headers</strong> for <code>X-Secret-Flag</code>.</p>
+    </div>
+    {% elif challenge.id == 'challenge7' %}
+    <div class="data-panel">
+      <div class="panel-label">{{ challenge_data.hash_type }} Hash (One-Way Function)</div>
+      <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="navigator.clipboard.writeText('{{ challenge_data.hash }}'); alert('Copied to clipboard!');">{{ challenge_data.hash }}</div>
+      <p class="panel-expl">This is an MD5 hash of a very common password. Paste this hash into <a href="https://crackstation.net" target="_blank" style="color:var(--cyan);text-decoration:underline;">CrackStation.net</a> to find the plain text password. Once cracked, wrap it as: <code>FLAG{&lt;cracked_password&gt;_is_terrible}</code>.</p>
+    </div>
+    {% elif challenge.id == 'challenge8' %}
+    <div class="data-panel">
+      <div class="panel-label">Hex-Encoded Message</div>
+      <div class="code-box" style="user-select: all; cursor: pointer;" title="Click to copy" onclick="navigator.clipboard.writeText('{{ challenge_data.hex_string }}'); alert('Copied to clipboard!');">{{ challenge_data.hex_string }}</div>
+      <p class="panel-expl">Computers represent characters as hexadecimal bytes (base 16). Decode this text using <a href="https://cyberchef.org" target="_blank" style="color:var(--cyan);text-decoration:underline;">CyberChef</a> (Recipe: "From Hex") or in Python: <code>bytes.fromhex("...").decode()</code>.</p>
+    </div>
+    {% endif %}
+
+    <!-- Hint toggle -->
+    <button class="hint-btn" onclick="document.getElementById('hint').classList.toggle('visible')">💡 Need a hint? Click here...</button>
+    <div class="hint-box" id="hint">💡 {{ challenge.hint }}</div>
+
+    {% if is_solved %}
+    <div class="solved-banner">
+      <h3>🎉 Challenge Solved & Completed!</h3>
+      <p style="font-size:0.9rem;margin-top:0.5rem;color:var(--text-dim);">This problem is now locked. Proceed to the next challenge!</p>
+      <div style="margin-top:1.25rem;">
+        {% if next_challenge %}
+        <a href="/challenge/{{ next_challenge.id }}" class="btn-next" style="display:inline-block;padding:0.75rem 1.75rem;background:var(--accent);color:#0a0e17;font-weight:bold;text-decoration:none;border-radius:8px;font-size:1rem;box-shadow:0 0 15px rgba(0,255,136,0.4);">Next Problem: {{ next_challenge.title }} →</a>
+        {% else %}
+        <a href="/leaderboard" class="btn-next" style="display:inline-block;padding:0.75rem 1.75rem;background:var(--gold);color:#0a0e17;font-weight:bold;text-decoration:none;border-radius:8px;font-size:1rem;">🏆 All Challenges Completed! View Leaderboard →</a>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <!-- Flag submission -->
+    <div class="submit-row" id="submit-container">
+      <input type="text" id="flag-input" placeholder="FLAG{...}" autocomplete="off"
+             onkeydown="if(event.key==='Enter')submitFlag()">
+      <button id="submit-btn" onclick="submitFlag()">Submit Flag</button>
+    </div>
+    {% endif %}
+
+    <div class="feedback" id="result"></div>
+
+    <!-- Dynamic Next Challenge Container (shown immediately upon solving) -->
+    <div id="next-action-container" style="display:none; text-align:center; margin-top:1.5rem;">
+      <a id="next-action-btn" href="#" style="display:inline-block;padding:0.85rem 2rem;background:var(--accent);color:#0a0e17;font-weight:bold;text-decoration:none;border-radius:10px;font-size:1.1rem;box-shadow:0 0 20px rgba(0,255,136,0.5);letter-spacing:0.5px;">Next Problem →</a>
+    </div>
+  </div>
+
+  <script src="/static/confetti.js"></script>
+  <script>
+  async function submitFlag() {
+      const inputEl = document.getElementById('flag-input');
+      const submitBtn = document.getElementById('submit-btn');
+      const flag = inputEl.value;
+      const result = document.getElementById('result');
+      const nextContainer = document.getElementById('next-action-container');
+      const nextBtn = document.getElementById('next-action-btn');
+
+      if (!flag.trim()) {
+          result.className = 'feedback fail';
+          result.textContent = '⚠️ Please enter a flag!';
+          return;
+      }
+      const resp = await fetch('/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ challenge_id: '{{ challenge.id }}', flag: flag })
+      });
+      const data = await resp.json();
+      result.className = data.success ? 'feedback win' : 'feedback fail';
+      result.textContent = data.message;
+      if (data.success) {
+          inputEl.disabled = true;
+          if (submitBtn) submitBtn.disabled = true;
+          if (window.launchConfetti) window.launchConfetti();
+          
+          // Display the Next Problem button
+          if (data.next_id) {
+              nextBtn.href = '/challenge/' + data.next_id;
+              nextBtn.textContent = 'Next Problem ➔';
+          } else {
+              nextBtn.href = '/leaderboard';
+              nextBtn.textContent = '🏆 All Done! Go to Leaderboard ➔';
+          }
+          nextContainer.style.display = 'block';
+          nextBtn.scrollIntoView({ behavior: 'smooth' });
+      }
+  }
+  </script>
+</body>
+</html>

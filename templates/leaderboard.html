@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard — Beginner CTF</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="lb-wrapper">
+    <div class="lb-hero">
+      <a href="/" class="breadcrumb-link">← Back to Challenges</a>
+      <h1 class="glow-text">🏆 LEADERBOARD</h1>
+      <p class="lb-sub">{{ max_points }} points across {{ total_challenges }} challenges</p>
+      <div class="cyber-line"></div>
+    </div>
+
+    {% if not leaderboard %}
+    <div class="lb-empty">
+      <p>No teams yet!</p>
+      <a href="/register" class="btn-register">Join the CTF 🚀</a>
+    </div>
+    {% else %}
+    <!-- Podium (top 3) -->
+    <div class="podium-row">
+      <!-- 2nd place (silver) -->
+      {% if leaderboard|length >= 2 %}
+      {% set second = leaderboard[1] %}
+      <div class="podium-entry silver">
+        <div class="podium-icon">🥈</div>
+        <div class="podium-team">{{ second.name }}</div>
+        <div class="podium-pts">{{ second.score }} pts</div>
+        <div class="podium-pillar pillar-2"></div>
+      </div>
+      {% endif %}
+
+      <!-- 1st place (gold) -->
+      {% if leaderboard|length >= 1 %}
+      {% set first = leaderboard[0] %}
+      <div class="podium-entry gold">
+        <div class="podium-icon">🥇</div>
+        <div class="podium-team">{{ first.name }}</div>
+        <div class="podium-pts">{{ first.score }} pts</div>
+        <div class="podium-pillar pillar-1"></div>
+      </div>
+      {% endif %}
+
+      <!-- 3rd place (bronze) -->
+      {% if leaderboard|length >= 3 %}
+      {% set third = leaderboard[2] %}
+      <div class="podium-entry bronze">
+        <div class="podium-icon">🥉</div>
+        <div class="podium-team">{{ third.name }}</div>
+        <div class="podium-pts">{{ third.score }} pts</div>
+        <div class="podium-pillar pillar-3"></div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Full table -->
+    <div class="lb-table-wrap">
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th class="rank-cell">#</th>
+            <th>Team</th>
+            <th>Solved</th>
+            <th>Score</th>
+            <th class="bar-cell">Progress</th>
+          </tr>
+        </thead>
+        <tbody id="lb-body">
+          {% for entry in leaderboard %}
+          {% set pct = (entry.score / max_points * 100) if max_points else 0 %}
+          <tr class="{{ 'is-you' if entry.id == current_team_id else '' }}">
+            <td class="rank-cell">
+              {% if entry.rank == 1 %}🥇{% elif entry.rank == 2 %}🥈{% elif entry.rank == 3 %}🥉{% else %}{{ entry.rank }}{% endif %}
+            </td>
+            <td class="team-cell">
+              {{ entry.name }}
+              {% if entry.id == current_team_id %}
+              <span class="you-tag">YOU</span>
+              {% endif %}
+            </td>
+            <td class="solved-cell">{{ entry.solved_count }} / {{ total_challenges }}</td>
+            <td class="score-cell">{{ entry.score }}</td>
+            <td class="bar-cell">
+              <div class="bar-track">
+                <div class="bar-fill" style="width: {{ pct }}%"></div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+
+    <p class="lb-status">🔄 Auto-refreshes every 10 seconds</p>
+  </div>
+
+  <script src="/static/confetti.js"></script>
+  <script>
+  // Auto-refresh: fetch /api/leaderboard every 10s, rebuild tbody innerHTML
+  async function refreshBoard() {
+      try {
+          const resp = await fetch('/api/leaderboard');
+          const data = await resp.json();
+          const tbody = document.getElementById('lb-body');
+          if (!tbody) return;
+          const currentTeam = '{{ current_team_id or "" }}';
+          const totalChallenges = {{ total_challenges }};
+          const maxPts = {{ max_points }};
+          tbody.innerHTML = data.map(entry => {
+              const isYou = entry.id === currentTeam;
+              const pct = maxPts ? (entry.score / maxPts * 100) : 0;
+              let medal = entry.rank;
+              if (entry.rank === 1) medal = '🥇';
+              else if (entry.rank === 2) medal = '🥈';
+              else if (entry.rank === 3) medal = '🥉';
+              return `<tr class="${isYou ? 'is-you' : ''}">
+                  <td class="rank-cell">${medal}</td>
+                  <td class="team-cell">${entry.name} ${isYou ? '<span class="you-tag">YOU</span>' : ''}</td>
+                  <td class="solved-cell">${entry.solved_count} / ${totalChallenges}</td>
+                  <td class="score-cell">${entry.score}</td>
+                  <td class="bar-cell"><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div></td>
+              </tr>`;
+          }).join('');
+      } catch(e) { console.error('Refresh failed:', e); }
+  }
+  setInterval(refreshBoard, 10000);
+  </script>
+</body>
+</html>
